@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Typeflow — Typing Test</title>
+  <style>
+    :root { --ink:#16233c; --muted:#6e7890; --paper:#fffdf9; --navy:#1d2b4b; --blue:#4668e8; --green:#1ba778; --red:#ef5d68; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:linear-gradient(135deg,#f1f5ff 0%,#fff9ef 100%); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(940px,calc(100% - 32px)); margin:0 auto; padding:42px 0 56px; }
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom:34px; }
+    .brand { font-size:1.35rem; font-weight:800; letter-spacing:-.05em; } .brand span { color:var(--blue); }
+    .tag { color:var(--muted); font-size:.9rem; }
+    .card { background:rgba(255,253,249,.91); border:1px solid rgba(45,65,100,.1); border-radius:22px; box-shadow:0 18px 45px rgba(39,61,111,.1); padding:clamp(24px,5vw,48px); }
+    .topline { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:29px; }
+    h1 { font-size:clamp(1.7rem,4vw,2.55rem); letter-spacing:-.055em; margin:0; } .subtitle { color:var(--muted); margin:7px 0 0; }
+    .timer { font-variant-numeric:tabular-nums; font-size:1.55rem; font-weight:800; color:var(--blue); background:#edf1ff; padding:8px 15px; border-radius:12px; }
+    .passage { background:#f5f7fb; border-radius:16px; font:500 clamp(1.15rem,2.4vw,1.5rem)/1.95 Georgia,serif; letter-spacing:.01em; padding:24px; min-height:159px; user-select:none; }
+    .passage span.correct { color:var(--green); } .passage span.incorrect { color:var(--red); background:#ffe9eb; text-decoration:underline; } .passage span.current { background:#cfd9ff; border-radius:3px; }
+    textarea { width:100%; height:116px; resize:none; margin-top:20px; padding:16px; color:var(--ink); border:2px solid #dce2ec; border-radius:14px; background:white; font:1.05rem/1.5 inherit; outline:none; }
+    textarea:focus { border-color:var(--blue); box-shadow:0 0 0 4px rgba(70,104,232,.12); } textarea:disabled { background:#f3f4f6; }
+    .hint { color:var(--muted); font-size:.86rem; margin:9px 0 0; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:28px; }
+    .stat { border:1px solid #e6e9f0; border-radius:13px; padding:14px; background:#fff; } .stat b { display:block; font-size:1.45rem; letter-spacing:-.04em; } .stat span { font-size:.78rem; color:var(--muted); text-transform:uppercase; font-weight:700; letter-spacing:.06em; }
+    .bottom { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:27px; } .message { color:var(--muted); font-size:.9rem; }
+    button { appearance:none; border:0; cursor:pointer; border-radius:11px; padding:12px 18px; background:var(--navy); color:white; font:700 .95rem inherit; } button:hover { background:#2b4171; }
+    #results { display:none; text-align:center; padding:18px 0 5px; } #results h2 { font-size:2rem; letter-spacing:-.05em; margin:0 0 8px; } .result-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:25px auto; max-width:440px; } .result { padding:20px; border-radius:15px; background:#f4f6fb; } .result strong { display:block; color:var(--blue); font-size:2.1rem; letter-spacing:-.06em; }
+    @media (max-width:560px) { main { padding-top:24px; } header { margin-bottom:23px; } .tag { display:none; } .topline { align-items:flex-start; } .timer { font-size:1.25rem; } .stats { grid-template-columns:1fr; } .bottom { align-items:flex-start; flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header><div class="brand">type<span>flow</span></div><div class="tag">A calmer way to practice</div></header>
+    <section class="card" id="test">
+      <div class="topline"><div><h1>Find your rhythm.</h1><p class="subtitle">Type the passage below as accurately as you can.</p></div><div class="timer" id="timer">1:00</div></div>
+      <div class="passage" id="passage" aria-label="Text to type"></div>
+      <textarea id="input" aria-label="Type the passage here" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Click here and start typing…"></textarea>
+      <p class="hint">The timer starts with your first keystroke. Your test ends after 60 seconds or when you finish.</p>
+      <div class="stats"><div class="stat"><b id="wpm">0</b><span>Words per minute</span></div><div class="stat"><b id="accuracy">100%</b><span>Accuracy</span></div><div class="stat"><b id="characters">0</b><span>Characters</span></div></div>
+      <div class="bottom"><span class="message" id="message">Take a breath. You’ve got this.</span><button id="restart" type="button">Restart test</button></div>
+    </section>
+    <section class="card" id="results"><h2>Nice work.</h2><p class="subtitle">Here is how that round went.</p><div class="result-grid"><div class="result"><strong id="finalWpm">0</strong>WPM</div><div class="result"><strong id="finalAccuracy">0%</strong>accuracy</div></div><button id="tryAgain" type="button">Try another passage</button></section>
+  </main>
+  <script>
+    const passages = [
+      "The best way to learn is to stay curious. Small moments of practice become steady habits, and steady habits can lead to remarkable things.",
+      "A quiet morning, a clear mind, and a few thoughtful words can change the way an entire day unfolds.",
+      "Progress does not need to be loud. It is often built one careful attempt, one patient correction, and one more try at a time."
+    ];
+    let target = passages[0], started = false, finished = false, startTime, interval;
+    const passage = document.querySelector('#passage'), input = document.querySelector('#input');
+    const timer = document.querySelector('#timer'), wpm = document.querySelector('#wpm'), accuracy = document.querySelector('#accuracy'), characters = document.querySelector('#characters');
+    function render() { passage.innerHTML = [...target].map((letter,i) => `<span class="${i < input.value.length ? (input.value[i] === letter ? 'correct' : 'incorrect') : i === input.value.length ? 'current' : ''}">${letter === ' ' ? '&nbsp;' : letter}</span>`).join(''); }
+    function metrics() { const typed=input.value.length, correct=[...input.value].filter((letter,i)=>letter===target[i]).length, minutes=started ? Math.max((Date.now()-startTime)/60000,1/60) : 1; return { typed, correct, accuracy:typed ? Math.round(correct/typed*100) : 100, wpm:Math.round((correct/5)/minutes) }; }
+    function update() { const m=metrics(); wpm.textContent=m.wpm; accuracy.textContent=m.accuracy+'%'; characters.textContent=m.typed; render(); if(input.value===target) finish(); }
+    function tick() { const left=Math.max(0,60-Math.floor((Date.now()-startTime)/1000)); timer.textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`; update(); if(!left) finish(); }
+    function start() { if(started) return; started=true; startTime=Date.now(); interval=setInterval(tick,250); document.querySelector('#message').textContent='Keep going — accuracy first, then speed.'; }
+    function finish() { if(finished) return; finished=true; clearInterval(interval); input.disabled=true; const m=metrics(); document.querySelector('#finalWpm').textContent=m.wpm; document.querySelector('#finalAccuracy').textContent=m.accuracy+'%'; document.querySelector('#test').style.display='none'; document.querySelector('#results').style.display='block'; }
+    function reset() { clearInterval(interval); target=passages[(passages.indexOf(target)+1)%passages.length]; started=false; finished=false; input.disabled=false; input.value=''; timer.textContent='1:00'; wpm.textContent='0'; accuracy.textContent='100%'; characters.textContent='0'; document.querySelector('#message').textContent='Take a breath. You’ve got this.'; render(); input.focus(); }
+    input.addEventListener('input',()=>{ start(); update(); }); document.querySelector('#restart').addEventListener('click',reset); document.querySelector('#tryAgain').addEventListener('click',()=>{ document.querySelector('#results').style.display='none'; document.querySelector('#test').style.display='block'; reset(); }); render();
+  </script>
+</body>
+</html>
